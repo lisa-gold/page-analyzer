@@ -9,6 +9,8 @@ repository = "https://github.com/lisa-gold/python-project-83.git"
 [tool.poetry.dependencies]
 python = "^3.10"
 flask = "^3.0.1"
+gunicorn = "^21.2.0"
+python-dotenv = "^1.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
