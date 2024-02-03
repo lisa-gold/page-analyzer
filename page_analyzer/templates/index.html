@@ -1,23 +1,26 @@
 {% extends "layout.html" %}
 {% block main %}
-<div class="card mb-auto bg-light p-4">
-    <div class="card-body">
-      <h1 class="card-title fs-3">Анализатор страниц</h1>
-        <p class="card-text fs-4">Бесплатно проверяйте сайты на SEO-пригодность</p>
+<div class="container-lg mt-3">
+    <div class="row">
+    <div class="col-12 col-md-10 col-lg-8 mx-auto border rounded-3 p-5 bg-light">
+      <h1 class="display-3">Анализатор страниц</h1>
+        <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
 
-        <form action="{{ url_for('urls_post') }}" method="post" class="row g-3">
-            <div class="col-9">
+        <form action="{{ url_for('urls_post') }}" method="post" class="d-flex justify-content-center">
+            
+            <div class="col-8">
                 <label for="input_url" class="visually-hidden">URL</label>
-                <input type="url" name="url" class="border rounded-3 form-control"
+                <input required type="url" name="url" class="border rounded-3 form-control"
             placeholder="https://www.example.com" id="input_url">
             </div>
             
-            <div class="col-3">
-                <input type="submit" class="btn btn-primary form-control" value="ПРОВЕРИТЬ"/>
+            <div class="col-4">
+                <input type="submit" class="btn btn-primary ms-3 px-5 mx-3" value="ПРОВЕРИТЬ"/>
             </div>
             
         </form>  
 
+    </div>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block main %}
+<div class="container-lg mt-3">
+    <h2>Сайт: {{ url.name }}</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+            <tbody>
+                <tr>
+                    <td>ID</td>
+                    <td>{{ url.id }}</td>
+            </tr>
+            <tr>
+                <td>Имя</td>
+                <td>{{ url.name }}</td>
+            </tr>
+            <tr>
+                <td>Дата создания</td>
+                <td>{{ url.created_at | default('', true) }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <h2>Проверки</h2>
+    <button class="btn btn-primary">Запустить проверку</button>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+            <thead>
+                <th>ID</th>
+                <th>Код ответа</th>
+                <th>h1</th>
+                <th>title</th>
+                <th>description</th>
+                <th>Дата создания</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ url.id }}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

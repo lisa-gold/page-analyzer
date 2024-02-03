@@ -1,10 +1,31 @@
 {% extends "layout.html" %}
 {% block main %}
-<div class="card mb-auto bg-light p-4">
-    <ul>
-        {% for url in urls %}
-        <li><a href="{{ url }}">{{ url }}</a></li>
-        {% endfor %}
-    </ul>
+<div class="container-lg mt-3">
+    <h1>Сайты</h1>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Имя</th>
+                    <th>Последняя проверка</th>
+                    <th>Код ответа</th>
+            </tr>
+            <tbody>
+                {% for url in urls %}
+                <tr>
+                    <td>{{ url.id | default('', true) }}</td>
+                    <td>
+                        <a href="{{ url }}">{{ url }}</a>
+                    </td>
+                    <td>{{ url.created_at | default('', true) }}</td>
+                    <td>{{ url.response | default('', true) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </thead>
+        </table>
+    </div>
+    <div class="bg-red">{{urls}}</div>
 </div>
 {% endblock %}
