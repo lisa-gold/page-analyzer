@@ -14,11 +14,11 @@
             <tbody>
                 {% for url in urls %}
                 <tr>
-                    <td>{{ url.id | default('', true) }}</td>
+                    <td>{{ url[0] | default('', true) }}</td>
                     <td>
-                        <a href="{{ url }}">{{ url }}</a>
+                        <a href="{{ url[1] }}">{{ url[1] }}</a>
                     </td>
-                    <td>{{ url.created_at | default('', true) }}</td>
+                    <td>{{ url[2] | default('', true) }}</td>
                     <td>{{ url.response | default('', true) }}</td>
                 </tr>
                 {% endfor %}
@@ -26,6 +26,5 @@
             </thead>
         </table>
     </div>
-    <div class="bg-red">{{urls}}</div>
 </div>
 {% endblock %}

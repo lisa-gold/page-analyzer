@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import os
 import psycopg2
 from page_analyzer.validator import validate
-from datetime import datetime
+from datetime import date
 
 
 load_dotenv()
@@ -22,18 +22,17 @@ conn = psycopg2.connect(DATABASE_URL)
 
 
 @app.route('/')
-def form():
-    return render_template(
-        'index.html',
-    )
+def index():
+    return render_template('index.html')
 
 
-@app.route('/urls')
+@app.get('/urls')
 def get_urls():
-    urls = ['test!!!']
-    with conn.cursor() as curs:
-        curs.execute('SELECT * FROM urls')
-        urls = curs.fetchall()
+    urls = []
+    with conn:
+        with conn.cursor() as curs:
+            curs.execute('SELECT * FROM urls')
+            urls = curs.fetchall()
     messages = get_flashed_messages()
     return render_template(
         'list_of_urls.html',
@@ -43,9 +42,9 @@ def get_urls():
 
 
 @app.post('/urls')
-def urls_post():
-    url = request.form.to_dict()
-    url, errors = validate(url['url'])
+def post_urls():
+    url = request.form['url']
+    url, errors = validate(url)
 
     if errors:
         flash(errors, 'error')
@@ -54,14 +53,27 @@ def urls_post():
             errors=errors
         ), 422
 
-    now = datetime.now()
+    today = date.today()
+    url_id = -1
 
-    with conn.cursor() as curs:
-        curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)",
-                     (str(url), now))
+    with conn:
+        with conn.cursor() as curs:
+            curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
+            url_old = curs.fetchall()
+            if url_old:
+                flash('This url has been already added!', 'error')
+                return render_template(
+                    'list_of_urls.html',
+                    errors=errors
+                    ), 422
+
+            curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)",
+                         (url, str(today)))
+            curs.execute('SELECT id FROM urls WHERE name=%s', (str(url),))
+            url_id = curs.fetchone()[0]
 
     flash('Url successfully added', 'success')
-    response = make_response(redirect(url_for('get_urls'), code=302))
+    response = make_response(redirect(url_for('get_url', id=url_id), code=302))
     return response
 
 
@@ -69,7 +81,7 @@ def urls_post():
 def get_url(id):
     url = {}
     with conn.cursor() as curs:
-        curs.execute('SELECT * FROM urls WHERE id=%s', id)
+        curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
         url = curs.fetchall()
     return render_template(
         'show.html',

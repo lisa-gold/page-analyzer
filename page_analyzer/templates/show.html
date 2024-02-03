@@ -7,15 +7,15 @@
             <tbody>
                 <tr>
                     <td>ID</td>
-                    <td>{{ url.id }}</td>
+                    <td>{{ url[0][0] }}</td>
             </tr>
             <tr>
                 <td>Имя</td>
-                <td>{{ url.name }}</td>
+                <td>{{ url[0][1] }}</td>
             </tr>
             <tr>
                 <td>Дата создания</td>
-                <td>{{ url.created_at | default('', true) }}</td>
+                <td>{{ url[0][2].year }}-{{ url[0][2].month }}-{{ url[0][2].day }}</td>
             </tr>
             </tbody>
         </table>
