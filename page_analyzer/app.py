@@ -65,7 +65,7 @@ def post_urls():
                 return render_template(
                     'list_of_urls.html',
                     errors=errors
-                    ), 422
+                ), 422
 
             curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)",
                          (url, str(today)))
