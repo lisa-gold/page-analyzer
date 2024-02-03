@@ -18,7 +18,11 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
-conn = psycopg2.connect(DATABASE_URL)
+
+
+def connect():
+    conn = psycopg2.connect(DATABASE_URL)
+    return conn
 
 
 @app.route('/')
@@ -29,7 +33,7 @@ def index():
 @app.get('/urls')
 def get_urls():
     urls = []
-    with conn:
+    with connect() as conn:
         with conn.cursor() as curs:
             curs.execute('SELECT * FROM urls')
             urls = curs.fetchall()
@@ -56,7 +60,7 @@ def post_urls():
     today = date.today()
     url_id = -1
 
-    with conn:
+    with connect() as conn:
         with conn.cursor() as curs:
             curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
             url_old = curs.fetchall()
@@ -80,9 +84,10 @@ def post_urls():
 @app.route('/urls/<id>')
 def get_url(id):
     url = {}
-    with conn.cursor() as curs:
-        curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
-        url = curs.fetchall()
+    with connect() as conn:
+        with conn.cursor() as curs:
+            curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
+            url = curs.fetchall()
     return render_template(
         'show.html',
         url=url
