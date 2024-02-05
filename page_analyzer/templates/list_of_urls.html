@@ -14,9 +14,9 @@
             <tbody>
                 {% for url in urls %}
                 <tr>
-                    <td>{{ url[0] | default('', true) }}</td>
+                    <td>{{ url[0] }}</td>
                     <td>
-                        <a href="{{ url[1] }}">{{ url[1] }}</a>
+                        <a href="{{ url_for('get_url', id = url[0]) }}">{{ url[1] }}</a>
                     </td>
                     <td>{{ url[2] | default('', true) }}</td>
                     <td>{{ url.response | default('', true) }}</td>

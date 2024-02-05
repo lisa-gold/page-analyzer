@@ -18,6 +18,11 @@
             </ul>
         </div>
     </nav>
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
 </header>
 
 <main class="flex-grow-1">

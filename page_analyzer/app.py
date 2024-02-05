@@ -35,9 +35,12 @@ def get_urls():
     urls = []
     with connect() as conn:
         with conn.cursor() as curs:
-            curs.execute('SELECT * FROM urls')
+            curs.execute('SELECT urls.id, urls.name, max(url_checks.created_at)\
+                          FROM urls\
+                          LEFT JOIN url_checks ON urls.id = url_checks.url_id\
+                          GROUP BY urls.id')
             urls = curs.fetchall()
-    messages = get_flashed_messages()
+    messages = get_flashed_messages(with_categories=True)
     return render_template(
         'list_of_urls.html',
         urls=urls,
@@ -67,7 +70,8 @@ def post_urls():
             if url_old:
                 flash('This url has been already added!', 'error')
                 return render_template(
-                    'list_of_urls.html',
+                    'show.html',
+                    url=url,
                     errors=errors
                 ), 422
 
@@ -84,11 +88,34 @@ def post_urls():
 @app.route('/urls/<id>')
 def get_url(id):
     url = {}
+    checks = []
+    messages = get_flashed_messages(with_categories=True)
     with connect() as conn:
         with conn.cursor() as curs:
             curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
             url = curs.fetchall()
+            curs.execute('SELECT * FROM url_checks WHERE url_id=%s', (id,))
+            checks = curs.fetchall()
     return render_template(
         'show.html',
-        url=url
+        url=url,
+        messages=messages,
+        checks=checks
     )
+
+
+@app.route('/urls/<id>/checks', methods=['POST'])
+def check_url(id):
+    errors = None
+    if errors:
+        flash(errors, 'error')
+        return redirect(url_for('get_url', id=id), code=422)
+    today = date.today()
+    with connect() as conn:
+        with conn.cursor() as curs:
+            curs.execute(
+                'INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)',
+                (id, str(today))
+            )
+    flash('Страница успешно проверена', 'success')
+    return redirect(url_for('get_url', id=id), code=302)

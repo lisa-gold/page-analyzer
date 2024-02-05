@@ -15,15 +15,18 @@
             </tr>
             <tr>
                 <td>Дата создания</td>
-                <td>{{ url[0][2].year }}-{{ url[0][2].month }}-{{ url[0][2].day }}</td>
+                <td>{{ url[0][2] }}</td>
+                <!-- <td>{{ url[0][2].year }}-{{ url[0][2].month }}-{{ url[0][2].day }}</td> -->
             </tr>
             </tbody>
         </table>
     </div>
     <h2>Проверки</h2>
-    <button class="btn btn-primary">Запустить проверку</button>
+    <form action="{{ url_for('check_url', id=url[0][0]) }}" method="post">
+    <input type="submit" class="btn btn-primary" value="Запустить проверку">
+    </form>
     <div class="table-responsive">
-        <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+        <table class="table table-bordered table-hover text-nowrap" data-test="checks">
             <thead>
                 <th>ID</th>
                 <th>Код ответа</th>
@@ -32,16 +35,20 @@
                 <th>description</th>
                 <th>Дата создания</th>
             </thead>
+            {% if checks %}
             <tbody>
+                {% for check in checks %}
                 <tr>
-                    <td>{{ url.id }}</td>
+                    <td>{{ check[1] }}</td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td></td>
-            </tr>
+                    <td>{{ check[6] }}</td>
+                </tr>
+                {% endfor %}
             </tbody>
+            {% endif %}
         </table>
     </div>
 </div>
