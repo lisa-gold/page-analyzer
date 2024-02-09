@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Page analyzer"
 authors = ["Elizaveta"]
 readme = "README.md"
+packages = [{include = "page_analyzer"}]
 repository = "https://github.com/lisa-gold/python-project-83.git"
 
 [tool.poetry.dependencies]
