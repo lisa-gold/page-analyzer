@@ -21,12 +21,12 @@
             </tbody>
         </table>
     </div>
-    <h2>Проверки</h2>
+    <h2 class="mt-5 mb-3">Проверки</h2>
     <form action="{{ url_for('check_url', id=url[0][0]) }}" method="post">
     <input type="submit" class="btn btn-primary" value="Запустить проверку">
     </form>
     <div class="table-responsive">
-        <table class="table table-bordered table-hover text-nowrap" data-test="checks">
+        <table class="table table-bordered table-hover mt-2" data-test="checks">
             <thead>
                 <th>ID</th>
                 <th>Код ответа</th>
@@ -39,11 +39,11 @@
             <tbody>
                 {% for check in checks %}
                 <tr>
-                    <td>{{ check[1] }}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>{{ check[0] }}</td>
+                    <td>{{ check[2] }}</td>
+                    <td>{{ check[3] }}</td>
+                    <td>{{ check[4] }}</td>
+                    <td>{{ check[5] }}</td>
                     <td>{{ check[6] }}</td>
                 </tr>
                 {% endfor %}

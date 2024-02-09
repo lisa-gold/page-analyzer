@@ -19,7 +19,7 @@
                         <a href="{{ url_for('get_url', id = url[0]) }}">{{ url[1] }}</a>
                     </td>
                     <td>{{ url[2] | default('', true) }}</td>
-                    <td>{{ url.response | default('', true) }}</td>
+                    <td>{{ url[3] | default('', true) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

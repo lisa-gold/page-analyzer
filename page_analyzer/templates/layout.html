@@ -20,7 +20,7 @@
     </nav>
     {% if messages %}
     {% for category, message in messages %}
-    <div class="{{ category }}">{{ message }}</div>
+    <div class="{{ category }}" role="alert">{{ message }}</div>
     {% endfor %}
     {% endif %}
 </header>

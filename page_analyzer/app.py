@@ -12,6 +12,8 @@ import os
 import psycopg2
 from page_analyzer.validator import validate
 from datetime import date
+import requests
+from bs4 import BeautifulSoup
 
 
 load_dotenv()
@@ -35,10 +37,17 @@ def get_urls():
     urls = []
     with connect() as conn:
         with conn.cursor() as curs:
-            curs.execute('SELECT urls.id, urls.name, max(url_checks.created_at)\
+            curs.execute('SELECT DISTINCT ON (u_id) u_id, n, date, status_code\
+                          FROM (\
+                          SELECT urls.id AS u_id, urls.name AS n,\
+                          max(url_checks.created_at) AS date\
                           FROM urls\
                           LEFT JOIN url_checks ON urls.id = url_checks.url_id\
-                          GROUP BY urls.id')
+                          GROUP BY urls.id\
+                          ) as t\
+                          LEFT JOIN url_checks\
+                          ON t.u_id = url_checks.url_id;'
+                         )
             urls = curs.fetchall()
     messages = get_flashed_messages(with_categories=True)
     return render_template(
@@ -54,7 +63,7 @@ def post_urls():
     url, errors = validate(url)
 
     if errors:
-        flash(errors, 'error')
+        flash(errors, 'alert alert-danger')
         return render_template(
             'index/html',
             errors=errors
@@ -68,7 +77,7 @@ def post_urls():
             curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
             url_old = curs.fetchall()
             if url_old:
-                flash('This url has been already added!', 'error')
+                flash('This url has been already added!', 'alert alert-danger')
                 return render_template(
                     'show.html',
                     url=url,
@@ -80,7 +89,7 @@ def post_urls():
             curs.execute('SELECT id FROM urls WHERE name=%s', (str(url),))
             url_id = curs.fetchone()[0]
 
-    flash('Url successfully added', 'success')
+    flash('Url successfully added', 'alert alert-success')
     response = make_response(redirect(url_for('get_url', id=url_id), code=302))
     return response
 
@@ -104,18 +113,67 @@ def get_url(id):
     )
 
 
+def get_url_name(id):
+    url = ''
+    with connect() as conn:
+        with conn.cursor() as curs:
+            curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
+            url = curs.fetchone()
+    return url[1]
+
+
+def make_request(url):
+    errors = None
+
+    try:
+        response = requests.get(url)
+    except BaseException:
+        errors = f'Произошла ошибка при проверке {url}'
+
+    if errors:
+        flash(errors, 'alert alert-danger')
+        return redirect(url_for('get_url', id=id), code=422)
+
+    return response, errors
+
+
+def get_information(response):
+    html = BeautifulSoup(response.text, 'lxml')
+    status_code = response.status_code
+
+    try:
+        h1 = html.h1.text
+        title = html.title.text
+    except BaseException:
+        h1 = ''
+        title = ''
+
+    description = ''
+    metas = html.head.find_all('meta')
+    for meta in metas:
+        if meta.get('name') == 'description':
+            description = meta['content']
+    if len(description) >= 500:
+        description = description[:497] + '...'
+
+    today = date.today()
+    return status_code, h1, title, description, str(today)
+
+
 @app.route('/urls/<id>/checks', methods=['POST'])
 def check_url(id):
-    errors = None
-    if errors:
-        flash(errors, 'error')
-        return redirect(url_for('get_url', id=id), code=422)
-    today = date.today()
+
+    url = get_url_name(id)
+    response, errors = make_request(url)
+    status_code, h1, title, description, today = get_information(response)
+
     with connect() as conn:
         with conn.cursor() as curs:
             curs.execute(
-                'INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)',
-                (id, str(today))
+                'INSERT INTO url_checks\
+                (url_id, status_code, h1, title, description, created_at)\
+                VALUES (%s, %s, %s, %s, %s, %s)',
+                (id, status_code, h1, title, description, today)
             )
-    flash('Страница успешно проверена', 'success')
+    flash('Страница успешно проверена', 'alert alert-success')
     return redirect(url_for('get_url', id=id), code=302)
