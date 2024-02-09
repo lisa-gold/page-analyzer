@@ -6,7 +6,7 @@ def validate(url):
     o = urlparse(url)
 
     url = o.scheme + '://' + o.hostname
-    if len(url) >= 255 or o.scheme == '':
+    if len(url) >= 255 or o.scheme != 'http' or o.scheme != 'https':
         errors = 'Некорректный URL'
     
     return url, errors

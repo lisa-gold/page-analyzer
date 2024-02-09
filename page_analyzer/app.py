@@ -120,6 +120,7 @@ def get_url_name(id):
 
 
 def make_request(url):
+    response = ''
     errors = None
 
     try:
@@ -127,16 +128,16 @@ def make_request(url):
     except BaseException:
         errors = f'Произошла ошибка при проверке {url}'
 
-    if errors:
-        flash(errors, 'alert alert-danger')
-        return redirect(url_for('get_url', id=id), code=422)
-
     return response, errors
 
 
 def get_information(response):
+    today = date.today()
     html = BeautifulSoup(response.text, 'lxml')
     status_code = response.status_code
+
+    if status_code != 200:
+        return status_code, '', '', '', str(today)
 
     h1 = html.h1.text if html.find('h1') else ''
     title = html.title.text if html.find('title') else ''
@@ -149,15 +150,18 @@ def get_information(response):
     if len(description) >= 500:
         description = description[:497] + '...'
 
-    today = date.today()
     return status_code, h1, title, description, str(today)
 
 
 @app.route('/urls/<id>/checks', methods=['POST'])
 def check_url(id):
-
     url = get_url_name(id)
     response, errors = make_request(url)
+
+    if errors:
+        flash(errors, 'alert alert-danger')
+        return make_response(redirect(url_for('get_url', id=id), code=422))
+
     status_code, h1, title, description, today = get_information(response)
 
     with connect() as conn:
