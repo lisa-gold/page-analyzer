@@ -65,7 +65,7 @@ def post_urls():
     if errors:
         flash(errors, 'alert alert-danger')
         return render_template(
-            'index/html',
+            'index.html',
             errors=errors
         ), 422
 
