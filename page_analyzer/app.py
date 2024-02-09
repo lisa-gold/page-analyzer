@@ -28,8 +28,12 @@ def connect():
 
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def ask_url():
+    messages = get_flashed_messages(with_categories=True)
+    return render_template(
+        'index.html',
+        messages=messages
+    )
 
 
 @app.get('/urls')
@@ -64,10 +68,11 @@ def post_urls():
 
     if errors:
         flash(errors, 'alert alert-danger')
-        return render_template(
-            'index.html',
-            errors=errors
-        ), 422
+        return make_response(redirect(url_for('ask_url'), code=422))
+        # render_template(
+        #     'index.html',
+        #     errors=errors
+        # ), 422
 
     today = date.today()
     url_id = -1
@@ -136,9 +141,6 @@ def get_information(response):
     html = BeautifulSoup(response.text, 'lxml')
     status_code = response.status_code
 
-    if status_code != 200:
-        return status_code, '', '', '', str(today)
-
     h1 = html.h1.text if html.find('h1') else ''
     title = html.title.text if html.find('title') else ''
 
@@ -164,13 +166,14 @@ def check_url(id):
 
     status_code, h1, title, description, today = get_information(response)
 
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                'INSERT INTO url_checks\
-                (url_id, status_code, h1, title, description, created_at)\
-                VALUES (%s, %s, %s, %s, %s, %s)',
-                (id, status_code, h1, title, description, today)
-            )
+    if status_code < 500:
+        with connect() as conn:
+            with conn.cursor() as curs:
+                curs.execute(
+                    'INSERT INTO url_checks\
+                    (url_id, status_code, h1, title, description, created_at)\
+                    VALUES (%s, %s, %s, %s, %s, %s)',
+                    (id, status_code, h1, title, description, today)
+                )
     flash('Страница успешно проверена', 'alert alert-success')
     return redirect(url_for('get_url', id=id), code=302)
