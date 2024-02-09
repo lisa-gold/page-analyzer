@@ -22,5 +22,3 @@ This is a web application that analyzes pages. It shows if a chosen page has a t
 |[psycopg](https://www.psycopg.org/docs/index.html)                           | "Database adapter" |
 |[requests](https://requests.readthedocs.io/en/latest/)                       | "HTTP library for Python" |
 |[Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)     | "Python library for pulling data out of HTML and XML files" |
-
-
