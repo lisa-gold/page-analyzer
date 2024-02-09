@@ -68,11 +68,7 @@ def post_urls():
 
     if errors:
         flash(errors, 'alert alert-danger')
-        return make_response(redirect(url_for('ask_url'), code=422))
-        # render_template(
-        #     'index.html',
-        #     errors=errors
-        # ), 422
+        return redirect(url_for('ask_url'))
 
     today = date.today()
     url_id = -1
@@ -131,7 +127,7 @@ def make_request(url):
     try:
         response = requests.get(url)
     except BaseException:
-        errors = f'Произошла ошибка при проверке {url}'
+        errors = 'Произошла ошибка при проверке'
 
     return response, errors
 
@@ -162,18 +158,20 @@ def check_url(id):
 
     if errors:
         flash(errors, 'alert alert-danger')
-        return make_response(redirect(url_for('get_url', id=id), code=422))
+        return redirect(url_for('get_url', id=id), code=422)
 
     status_code, h1, title, description, today = get_information(response)
 
-    if status_code < 500:
-        with connect() as conn:
-            with conn.cursor() as curs:
-                curs.execute(
-                    'INSERT INTO url_checks\
-                    (url_id, status_code, h1, title, description, created_at)\
-                    VALUES (%s, %s, %s, %s, %s, %s)',
-                    (id, status_code, h1, title, description, today)
-                )
+    if status_code >= 500:
+        flash('Произошла ошибка при проверке', 'alert alert-danger')
+        return redirect(url_for('get_url', id=id), code=422)
+    with connect() as conn:
+        with conn.cursor() as curs:
+            curs.execute(
+                'INSERT INTO url_checks\
+                (url_id, status_code, h1, title, description, created_at)\
+                VALUES (%s, %s, %s, %s, %s, %s)',
+                (id, status_code, h1, title, description, today)
+            )
     flash('Страница успешно проверена', 'alert alert-success')
     return redirect(url_for('get_url', id=id), code=302)
