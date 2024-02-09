@@ -4,8 +4,9 @@ from urllib.parse import urlparse
 def validate(url):
     errors = None
     o = urlparse(url)
+
     url = o.scheme + '://' + o.hostname
-    if len(url) >= 255:
-        errors = 'link is too long!'
+    if len(url) >= 255 or o.scheme == '':
+        errors = 'Некорректный URL'
     
     return url, errors

@@ -77,19 +77,16 @@ def post_urls():
             curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
             url_old = curs.fetchall()
             if url_old:
-                flash('This url has been already added!', 'alert alert-danger')
-                return render_template(
-                    'show.html',
-                    url=url,
-                    errors=errors
-                ), 422
+                flash('Страница уже существует', 'alert alert-info')
+                url_id = url_old[0][0]
+                return redirect(url_for('get_url', id=url_id), code=302)
 
             curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)",
                          (url, str(today)))
             curs.execute('SELECT id FROM urls WHERE name=%s', (str(url),))
             url_id = curs.fetchone()[0]
 
-    flash('Url successfully added', 'alert alert-success')
+    flash('Страница успешно добавлена', 'alert alert-success')
     response = make_response(redirect(url_for('get_url', id=url_id), code=302))
     return response
 
