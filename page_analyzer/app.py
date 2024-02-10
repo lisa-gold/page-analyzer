@@ -46,7 +46,7 @@ def get_urls():
                 'index.html',
                 messages=messages,
                 url=url_original
-            )
+            ), 422
 
     urls = []
     with connect() as conn:
