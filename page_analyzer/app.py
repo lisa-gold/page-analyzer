@@ -37,71 +37,61 @@ def ask_url():
     )
 
 
-@app.get('/urls')
+@app.route('/urls', methods=['POST', 'GET'])
 def get_urls():
-    messages = get_flashed_messages(with_categories=True)
-    url_original = session.get('url_original', '')
-    for category, message in messages:
-        if message == 'Некорректный URL':
+    if request.method == 'POST':
+        url_original = request.form['url']
+        url, errors = validate(url_original)
+
+        if errors:
+            session['url_original'] = url_original
             return render_template(
                 'index.html',
-                messages=messages,
+                messages=[('alert alert-danger', errors)],
                 url=url_original
             ), 422
+        today = date.today()
+        url_id = -1
 
-    urls = []
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute('SELECT DISTINCT ON (u_id) u_id, n, date, status_code\
-                          FROM (\
-                          SELECT urls.id AS u_id, urls.name AS n,\
-                          max(url_checks.created_at) AS date\
-                          FROM urls\
-                          LEFT JOIN url_checks ON urls.id = url_checks.url_id\
-                          GROUP BY urls.id\
-                          ) as t\
-                          LEFT JOIN url_checks\
-                          ON t.u_id = url_checks.url_id;'
-                         )
-            urls = curs.fetchall()
+        with connect() as conn:
+            with conn.cursor() as curs:
+                curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
+                url_old = curs.fetchall()
+                if url_old:
+                    flash('Страница уже существует', 'alert alert-info')
+                    url_id = url_old[0][0]
+                    return redirect(url_for('get_url', id=url_id), code=302)
 
-    return render_template(
-        'list_of_urls.html',
-        urls=urls,
-        messages=messages,
-    )
+                curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)",
+                             (url, str(today)))
+                curs.execute('SELECT id FROM urls WHERE name=%s', (str(url),))
+                url_id = curs.fetchone()[0]
 
+        flash('Страница успешно добавлена', 'alert alert-success')
+        response = make_response(redirect(url_for('get_url', id=url_id), code=302))
+        return response
+    else:
+        messages = get_flashed_messages(with_categories=True)
+        urls = []
+        with connect() as conn:
+            with conn.cursor() as curs:
+                curs.execute('SELECT DISTINCT ON (u_id) u_id, n, date, status_code\
+                            FROM (\
+                            SELECT urls.id AS u_id, urls.name AS n,\
+                            max(url_checks.created_at) AS date\
+                            FROM urls\
+                            LEFT JOIN url_checks ON urls.id = url_checks.url_id\
+                            GROUP BY urls.id\
+                            ) as t\
+                            LEFT JOIN url_checks\
+                            ON t.u_id = url_checks.url_id;')
+                urls = curs.fetchall()
 
-@app.post('/urls')
-def post_urls():
-    url_original = request.form['url']
-    url, errors = validate(url_original)
-
-    if errors:
-        flash(errors, 'alert alert-danger')
-        session['url_original'] = url_original
-        return redirect(url_for('get_urls'))
-
-    today = date.today()
-    url_id = -1
-
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
-            url_old = curs.fetchall()
-            if url_old:
-                flash('Страница уже существует', 'alert alert-info')
-                url_id = url_old[0][0]
-                return redirect(url_for('get_url', id=url_id), code=302)
-
-            curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)",
-                         (url, str(today)))
-            curs.execute('SELECT id FROM urls WHERE name=%s', (str(url),))
-            url_id = curs.fetchone()[0]
-
-    flash('Страница успешно добавлена', 'alert alert-success')
-    response = make_response(redirect(url_for('get_url', id=url_id), code=302))
-    return response
+        return render_template(
+            'list_of_urls.html',
+            urls=urls,
+            messages=messages,
+        ), 302
 
 
 @app.route('/urls/<id>')

@@ -6,7 +6,7 @@
       <h1 class="display-3">Анализатор страниц</h1>
         <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
 
-        <form action="{{ url_for('post_urls') }}" method="post" class="d-flex justify-content-center" required>
+        <form action="{{ url_for('get_urls') }}" method="post" class="d-flex justify-content-center" required>
             
                 <label for="input_url" class="visually-hidden">URL</label>
                 <input required type="text" name="url" class="border rounded-3 form-control form-control-lg"
