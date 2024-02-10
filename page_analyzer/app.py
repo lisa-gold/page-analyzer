@@ -38,6 +38,16 @@ def ask_url():
 
 @app.get('/urls')
 def get_urls():
+    messages = get_flashed_messages(with_categories=True)
+    url_original = request.cookies.get('url_original') or ''
+    for category, message in messages:
+        if message == 'Некорректный URL':
+            return render_template(
+                'index.html',
+                messages=messages,
+                url=url_original
+            )
+
     urls = []
     with connect() as conn:
         with conn.cursor() as curs:
@@ -53,22 +63,24 @@ def get_urls():
                           ON t.u_id = url_checks.url_id;'
                          )
             urls = curs.fetchall()
-    messages = get_flashed_messages(with_categories=True)
+
     return render_template(
         'list_of_urls.html',
         urls=urls,
-        messages=messages
+        messages=messages,
     )
 
 
 @app.post('/urls')
 def post_urls():
-    url = request.form['url']
-    url, errors = validate(url)
+    url_original = request.form['url']
+    url, errors = validate(url_original)
 
     if errors:
         flash(errors, 'alert alert-danger')
-        return redirect(url_for('ask_url'))
+        response = make_response(redirect(url_for('get_urls'), code=302))
+        response.set_cookie('url_original', url_original)
+        return response
 
     today = date.today()
     url_id = -1

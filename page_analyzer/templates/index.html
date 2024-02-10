@@ -10,7 +10,7 @@
             
                 <label for="input_url" class="visually-hidden">URL</label>
                 <input required type="text" name="url" class="border rounded-3 form-control form-control-lg"
-            placeholder="https://www.example.com" id="input_url" value="{{ url }}">
+            placeholder="https://www.example.com" id="input_url" value="{{ url | default('', true) }}">
 
                 <input type="submit" class="btn btn-primary btn-lg ms-3 px-5 mx-3" value="ПРОВЕРИТЬ"/>
             
