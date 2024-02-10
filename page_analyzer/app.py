@@ -6,8 +6,7 @@ from flask import (
     make_response,
     redirect,
     flash,
-    get_flashed_messages,
-    session)
+    get_flashed_messages)
 from dotenv import load_dotenv
 import os
 import psycopg2
