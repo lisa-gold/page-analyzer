@@ -30,10 +30,8 @@ def connect():
 
 @app.route('/')
 def ask_url():
-    messages = get_flashed_messages(with_categories=True)
     return render_template(
-        'index.html',
-        messages=messages
+        'index.html'
     )
 
 
@@ -44,12 +42,12 @@ def get_urls():
         url, errors = validate(url_original)
 
         if errors:
-            session['url_original'] = url_original
             return render_template(
                 'index.html',
                 messages=[('alert alert-danger', errors)],
                 url=url_original
             ), 422
+
         today = date.today()
         url_id = -1
 
