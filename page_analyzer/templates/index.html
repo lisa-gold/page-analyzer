@@ -6,17 +6,13 @@
       <h1 class="display-3">Анализатор страниц</h1>
         <p class="lead">Бесплатно проверяйте сайты на SEO-пригодность</p>
 
-        <form action="{{ url_for('post_urls') }}" method="post" class="d-flex justify-content-center">
+        <form action="{{ url_for('post_urls') }}" method="post" class="d-flex justify-content-center" required>
             
-            <div class="col-8">
                 <label for="input_url" class="visually-hidden">URL</label>
-                <input required type="text" name="url" class="border rounded-3 form-control"
-            placeholder="https://www.example.com" id="input_url">
-            </div>
-            
-            <div class="col-4">
-                <input type="submit" class="btn btn-primary ms-3 px-5 mx-3" value="ПРОВЕРИТЬ"/>
-            </div>
+                <input required type="text" name="url" class="border rounded-3 form-control form-control-lg"
+            placeholder="https://www.example.com" id="input_url" value="{{ url }}">
+
+                <input type="submit" class="btn btn-primary btn-lg ms-3 px-5 mx-3" value="ПРОВЕРИТЬ"/>
             
         </form>  
 

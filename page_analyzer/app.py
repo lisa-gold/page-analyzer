@@ -158,13 +158,13 @@ def check_url(id):
 
     if errors:
         flash(errors, 'alert alert-danger')
-        return redirect(url_for('get_url', id=id), code=422)
+        return redirect(url_for('get_url', id=id))
 
     status_code, h1, title, description, today = get_information(response)
 
     if status_code >= 500:
         flash('Произошла ошибка при проверке', 'alert alert-danger')
-        return redirect(url_for('get_url', id=id), code=422)
+        return redirect(url_for('get_url', id=id))
     with connect() as conn:
         with conn.cursor() as curs:
             curs.execute(
