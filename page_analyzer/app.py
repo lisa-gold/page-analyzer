@@ -78,7 +78,7 @@ def post_urls():
 
     if errors:
         flash(errors, 'alert alert-danger')
-        response = make_response(redirect(url_for('get_urls'), code=302))
+        response = make_response(redirect(url_for('get_urls'), 422))
         response.set_cookie('url_original', url_original)
         return response
 
