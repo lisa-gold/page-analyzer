@@ -6,7 +6,8 @@ from flask import (
     make_response,
     redirect,
     flash,
-    get_flashed_messages)
+    get_flashed_messages,
+    session)
 from dotenv import load_dotenv
 import os
 import psycopg2
@@ -39,7 +40,7 @@ def ask_url():
 @app.get('/urls')
 def get_urls():
     messages = get_flashed_messages(with_categories=True)
-    url_original = request.cookies.get('url_original') or ''
+    url_original = session.get('url_original', '')
     for category, message in messages:
         if message == 'Некорректный URL':
             return render_template(
@@ -78,9 +79,8 @@ def post_urls():
 
     if errors:
         flash(errors, 'alert alert-danger')
-        response = make_response(redirect(url_for('get_urls'), 422))
-        response.set_cookie('url_original', url_original)
-        return response
+        session['url_original'] = url_original
+        return redirect(url_for('get_urls'))
 
     today = date.today()
     url_id = -1
