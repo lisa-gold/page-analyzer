@@ -7,24 +7,22 @@ from flask import (
     redirect,
     flash,
     get_flashed_messages)
-from dotenv import load_dotenv
 import os
-import psycopg2
 from page_analyzer.validator import validate
-from datetime import date
+from page_analyzer.database import (
+    is_url_new,
+    get_id_by_name,
+    add_url,
+    select_urls,
+    select_url,
+    select_checks,
+    add_check)
 import requests
 from bs4 import BeautifulSoup
 
 
-load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-
-def connect():
-    conn = psycopg2.connect(DATABASE_URL)
-    return conn
 
 
 @app.route('/')
@@ -47,43 +45,17 @@ def get_urls():
                 url=url_original
             ), 422
 
-        today = date.today()
-        url_id = -1
+        if not is_url_new(url):
+            flash('Страница уже существует', 'alert alert-info')
+            url_id = get_id_by_name(str(url))
+            return redirect(url_for('get_url', id=url_id), code=302)
 
-        with connect() as conn:
-            with conn.cursor() as curs:
-                curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
-                url_old = curs.fetchall()
-                if url_old:
-                    flash('Страница уже существует', 'alert alert-info')
-                    url_id = url_old[0][0]
-                    return redirect(url_for('get_url', id=url_id), code=302)
-
-                curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)",
-                             (url, str(today)))
-                curs.execute('SELECT id FROM urls WHERE name=%s', (str(url),))
-                url_id = curs.fetchone()[0]
-
+        url_id = add_url(url)
         flash('Страница успешно добавлена', 'alert alert-success')
-        response = make_response(redirect(url_for('get_url', id=url_id), code=302))
-        return response
+        return make_response(redirect(url_for('get_url', id=url_id), code=302))
     else:
         messages = get_flashed_messages(with_categories=True)
-        urls = []
-        with connect() as conn:
-            with conn.cursor() as curs:
-                curs.execute('SELECT DISTINCT ON (u_id) u_id, n, date, status_code\
-                            FROM (\
-                            SELECT urls.id AS u_id, urls.name AS n,\
-                            max(url_checks.created_at) AS date\
-                            FROM urls\
-                            LEFT JOIN url_checks ON urls.id = url_checks.url_id\
-                            GROUP BY urls.id\
-                            ) as t\
-                            LEFT JOIN url_checks\
-                            ON t.u_id = url_checks.url_id;')
-                urls = curs.fetchall()
-
+        urls = select_urls()
         return render_template(
             'list_of_urls.html',
             urls=urls,
@@ -93,15 +65,9 @@ def get_urls():
 
 @app.route('/urls/<id>')
 def get_url(id):
-    url = {}
-    checks = []
     messages = get_flashed_messages(with_categories=True)
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
-            url = curs.fetchall()
-            curs.execute('SELECT * FROM url_checks WHERE url_id=%s', (id,))
-            checks = curs.fetchall()
+    url = select_url(id) or {}
+    checks = select_checks(id) or []
     return render_template(
         'show.html',
         url=url,
@@ -111,12 +77,8 @@ def get_url(id):
 
 
 def get_url_name(id):
-    url = ''
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
-            url = curs.fetchone()
-    return url[1]
+    url = select_url(id)[0][1] or ''
+    return url
 
 
 def make_request(url):
@@ -132,7 +94,6 @@ def make_request(url):
 
 
 def get_information(response):
-    today = date.today()
     html = BeautifulSoup(response.text, 'lxml')
     status_code = response.status_code
 
@@ -144,10 +105,11 @@ def get_information(response):
     for meta in metas:
         if meta.get('name') == 'description':
             description = meta['content']
+
     if len(description) >= 500:
         description = description[:497] + '...'
 
-    return status_code, h1, title, description, str(today)
+    return status_code, h1, title, description
 
 
 @app.route('/urls/<id>/checks', methods=['POST'])
@@ -159,18 +121,11 @@ def check_url(id):
         flash(errors, 'alert alert-danger')
         return redirect(url_for('get_url', id=id))
 
-    status_code, h1, title, description, today = get_information(response)
+    status_code, h1, title, description = get_information(response)
 
     if status_code >= 500:
         flash('Произошла ошибка при проверке', 'alert alert-danger')
         return redirect(url_for('get_url', id=id))
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute(
-                'INSERT INTO url_checks\
-                (url_id, status_code, h1, title, description, created_at)\
-                VALUES (%s, %s, %s, %s, %s, %s)',
-                (id, status_code, h1, title, description, today)
-            )
+    add_check(id, status_code, h1, title, description)
     flash('Страница успешно проверена', 'alert alert-success')
     return redirect(url_for('get_url', id=id), code=302)
