@@ -61,7 +61,7 @@ def select_urls():
 
 def select_url(id):
     url = {}
-    with connect() as conn:   
+    with connect() as conn:
         with conn.cursor() as curs:
             curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
             url = curs.fetchall()
