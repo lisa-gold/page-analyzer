@@ -19,7 +19,7 @@ def get_id_by_url_name(url_name):
             curs.execute('SELECT * FROM urls WHERE name=%s', (url_name,))
             url_data = curs.fetchone()
             if url_data:
-             return url_data['id']
+                return url_data['id']
     return False
 
 
@@ -52,7 +52,7 @@ def select_urls_data():
 
 
 def select_url_data(id):
-    url = {}
+    url_data = {}
     with connect() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
