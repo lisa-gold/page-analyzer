@@ -17,6 +17,7 @@ datetime = "^5.4"
 requests = "^2.31.0"
 bs4 = "^0.0.2"
 lxml = "^5.1.0"
+validators = "^0.22.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
 import psycopg2
+from psycopg2.extras import RealDictCursor
 
 
 load_dotenv()
@@ -12,63 +13,54 @@ def connect():
     return conn
 
 
-def is_url_new(url):
+def get_id_by_url_name(url_name):
     with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute('SELECT * FROM urls WHERE name=%s', (str(url),))
-            url_old = curs.fetchall()
-            if url_old:
-                return False
-    return True
-
-
-def get_id_by_name(name):
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute('SELECT * FROM urls WHERE name=%s', (name,))
-            url = curs.fetchall()
-            url_id = url[0][0]
-    return url_id
+        with conn.cursor(cursor_factory=RealDictCursor) as curs:
+            curs.execute('SELECT * FROM urls WHERE name=%s', (url_name,))
+            url_data = curs.fetchone()
+            if url_data:
+             return url_data['id']
+    return False
 
 
 def add_url(url):
     url_id = -1
     with connect() as conn:
-        with conn.cursor() as curs:
+        with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute("INSERT INTO urls (name) VALUES (%s)",
                          (url,))
-            curs.execute('SELECT id FROM urls WHERE name=%s', (str(url),))
-            url_id = curs.fetchone()[0]
+            curs.execute('SELECT id FROM urls WHERE name=%s', (url,))
+            url_id = curs.fetchone()['id']
     return url_id
 
 
-def select_urls():
+def select_urls_data():
     with connect() as conn:
         with conn.cursor() as curs:
-            curs.execute('SELECT DISTINCT ON (u_id) u_id, n, date, status_code\
+            curs.execute('SELECT DISTINCT ON (u_id) u_id, name, date, status_code\
                          FROM (\
-                         SELECT urls.id AS u_id, urls.name AS n,\
+                         SELECT urls.id AS u_id, urls.name AS name,\
                          max(url_checks.created_at) AS date\
                          FROM urls\
                          LEFT JOIN url_checks ON urls.id = url_checks.url_id\
                          GROUP BY urls.id\
-                         ) as t\
+                         ) as table1\
                          LEFT JOIN url_checks\
-                         ON t.u_id = url_checks.url_id;')
-            urls = curs.fetchall()
-    return urls
+                         ON table1.u_id = url_checks.url_id;')
+            urls_data = curs.fetchall()
+    return urls_data
 
 
-def select_url(id):
+def select_url_data(id):
     url = {}
     with connect() as conn:
-        with conn.cursor() as curs:
+        with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
-            url = curs.fetchall()
-    return url
+            url_data = curs.fetchone()
+    return url_data
 
 
-def select_checks(id):
+def select_url_checks(id):
     checks = []
     with connect() as conn:
         with conn.cursor() as curs:
@@ -77,7 +69,7 @@ def select_checks(id):
     return checks
 
 
-def add_check(id, status_code, h1, title, description):
+def add_url_check(id, status_code, h1, title, description):
     with connect() as conn:
         with conn.cursor() as curs:
             curs.execute(

@@ -8,17 +8,16 @@ from flask import (
     flash,
     get_flashed_messages)
 import os
-from page_analyzer.validator import validate
+from page_analyzer.validator import validate, normalize_url
 from page_analyzer.database import (
-    is_url_new,
-    get_id_by_name,
+    get_id_by_url_name,
     add_url,
-    select_urls,
-    select_url,
-    select_checks,
-    add_check)
+    select_urls_data,
+    select_url_data,
+    select_url_checks,
+    add_url_check)
 import requests
-from bs4 import BeautifulSoup
+from page_analyzer.processing_response import get_information
 
 
 app = Flask(__name__)
@@ -36,18 +35,20 @@ def ask_url():
 def get_urls():
     if request.method == 'POST':
         url_original = request.form['url']
-        url, error = validate(url_original)
+        url = normalize_url(url_original)
+        error = validate(url)
 
         if error:
+            flash(error, 'alert alert-danger')
             return render_template(
                 'index.html',
-                messages=[('alert alert-danger', error)],
+                messages=get_flashed_messages(with_categories=True),
                 url=url_original
             ), 422
 
-        if not is_url_new(url):
+        url_id = get_id_by_url_name(str(url))
+        if url_id:
             flash('Страница уже существует', 'alert alert-info')
-            url_id = get_id_by_name(str(url))
             return redirect(url_for('get_url', id=url_id), code=302)
 
         url_id = add_url(url)
@@ -55,7 +56,7 @@ def get_urls():
         return make_response(redirect(url_for('get_url', id=url_id), code=302))
     else:
         messages = get_flashed_messages(with_categories=True)
-        urls = select_urls()
+        urls = select_urls_data()
         return render_template(
             'list_of_urls.html',
             urls=urls,
@@ -66,8 +67,8 @@ def get_urls():
 @app.route('/urls/<id>')
 def get_url(id):
     messages = get_flashed_messages(with_categories=True)
-    url = select_url(id) or {}
-    checks = select_checks(id) or []
+    url = select_url_data(id) or {}
+    checks = select_url_checks(id) or []
     return render_template(
         'show.html',
         url=url,
@@ -76,12 +77,9 @@ def get_url(id):
     )
 
 
-def get_url_name(id):
-    url = select_url(id)[0][1] or ''
-    return url
-
-
-def make_request(url):
+@app.route('/urls/<id>/checks', methods=['POST'])
+def check_url(id):
+    url = select_url_data(id)['name'] or ''
     response = ''
     error = None
 
@@ -89,33 +87,6 @@ def make_request(url):
         response = requests.get(url)
     except BaseException:
         error = 'Произошла ошибка при проверке'
-
-    return response, error
-
-
-def get_information(response):
-    html = BeautifulSoup(response.text, 'lxml')
-    status_code = response.status_code
-
-    h1 = html.h1.text if html.find('h1') else ''
-    title = html.title.text if html.find('title') else ''
-
-    description = ''
-    metas = html.head.find_all('meta')
-    for meta in metas:
-        if meta.get('name') == 'description':
-            description = meta['content']
-
-    if len(description) >= 500:
-        description = description[:497] + '...'
-
-    return status_code, h1, title, description
-
-
-@app.route('/urls/<id>/checks', methods=['POST'])
-def check_url(id):
-    url = get_url_name(id)
-    response, error = make_request(url)
 
     if error:
         flash(error, 'alert alert-danger')
@@ -126,6 +97,6 @@ def check_url(id):
     if status_code >= 500:
         flash('Произошла ошибка при проверке', 'alert alert-danger')
         return redirect(url_for('get_url', id=id))
-    add_check(id, status_code, h1, title, description)
+    add_url_check(id, status_code, h1, title, description)
     flash('Страница успешно проверена', 'alert alert-success')
     return redirect(url_for('get_url', id=id), code=302)
