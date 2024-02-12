@@ -2,9 +2,9 @@ from urllib.parse import urlparse
 
 
 def validate(url):
-    errors = None
+    error = None
     o = urlparse(url)
     url_norm = f'{o.scheme}://{o.hostname}'
     if len(url) >= 255 or (o.scheme != 'http' and o.scheme != 'https'):
-        errors = 'Некорректный URL'
-    return url_norm, errors
+        error = 'Некорректный URL'
+    return url_norm, error

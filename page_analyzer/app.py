@@ -36,12 +36,12 @@ def ask_url():
 def get_urls():
     if request.method == 'POST':
         url_original = request.form['url']
-        url, errors = validate(url_original)
+        url, error = validate(url_original)
 
-        if errors:
+        if error:
             return render_template(
                 'index.html',
-                messages=[('alert alert-danger', errors)],
+                messages=[('alert alert-danger', error)],
                 url=url_original
             ), 422
 
@@ -83,14 +83,14 @@ def get_url_name(id):
 
 def make_request(url):
     response = ''
-    errors = None
+    error = None
 
     try:
         response = requests.get(url)
     except BaseException:
-        errors = 'Произошла ошибка при проверке'
+        error = 'Произошла ошибка при проверке'
 
-    return response, errors
+    return response, error
 
 
 def get_information(response):
@@ -115,10 +115,10 @@ def get_information(response):
 @app.route('/urls/<id>/checks', methods=['POST'])
 def check_url(id):
     url = get_url_name(id)
-    response, errors = make_request(url)
+    response, error = make_request(url)
 
-    if errors:
-        flash(errors, 'alert alert-danger')
+    if error:
+        flash(error, 'alert alert-danger')
         return redirect(url_for('get_url', id=id))
 
     status_code, h1, title, description = get_information(response)
