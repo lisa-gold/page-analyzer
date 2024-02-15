@@ -1,20 +1,17 @@
 from bs4 import BeautifulSoup
 
 
-def get_information(response):
-    html = BeautifulSoup(response.text, 'lxml')
-    status_code = response.status_code
+def get_information(content):
+    html = BeautifulSoup(content, 'lxml')
 
     h1 = html.h1.text if html.find('h1') else ''
     title = html.title.text if html.find('title') else ''
 
     description = ''
-    metas = html.head.find_all('meta')
-    for meta in metas:
-        if meta.get('name') == 'description':
-            description = meta['content']
+    meta = html.head.find_all('meta', attrs={'name':'description'})[0]
+    description = meta['content']
 
-    if len(description) >= 500:
-        description = description[:497] + '...'
+    h1, title, description = map(lambda elem: elem[:252] + '...' if len(elem) >= 255 else elem,
+                                 [h1, title, description])
 
-    return status_code, h1, title, description
+    return h1, title, description

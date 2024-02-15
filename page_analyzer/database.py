@@ -26,17 +26,16 @@ def get_id_by_url_name(url_name):
 def add_url(url):
     url_id = -1
     with connect() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as curs:
-            curs.execute("INSERT INTO urls (name) VALUES (%s)",
+        with conn.cursor() as curs:
+            curs.execute("INSERT INTO urls (name) VALUES (%s) RETURNING id",
                          (url,))
-            curs.execute('SELECT id FROM urls WHERE name=%s', (url,))
-            url_id = curs.fetchone()['id']
+            url_id = curs.fetchone()[0]
     return url_id
 
 
-def select_urls_data():
+def get_urls_data():
     with connect() as conn:
-        with conn.cursor() as curs:
+        with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute('SELECT DISTINCT ON (u_id) u_id, name, date, status_code\
                          FROM (\
                          SELECT urls.id AS u_id, urls.name AS name,\
@@ -51,7 +50,7 @@ def select_urls_data():
     return urls_data
 
 
-def select_url_data(id):
+def get_url_by_id(id):
     url_data = {}
     with connect() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
@@ -60,7 +59,7 @@ def select_url_data(id):
     return url_data
 
 
-def select_url_checks(id):
+def get_checks_by_url_id(id):
     checks = []
     with connect() as conn:
         with conn.cursor() as curs:
