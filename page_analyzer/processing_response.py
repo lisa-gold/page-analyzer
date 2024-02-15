@@ -8,7 +8,7 @@ def get_information(content):
     title = html.title.text if html.find('title') else ''
 
     description = ''
-    meta = html.head.find_all('meta', attrs={'name':'description'})[0]
+    meta = html.head.find_all('meta', attrs={'name': 'description'})[0]
     description = meta['content']
 
     h1, title, description = map(lambda elem: elem[:252] + '...' if len(elem) >= 255 else elem,
