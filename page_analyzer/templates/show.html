@@ -38,12 +38,12 @@
             <tbody>
                 {% for check in checks %}
                 <tr>
-                    <td>{{ check[0] }}</td>
-                    <td>{{ check[2] }}</td>
-                    <td>{{ check[3] }}</td>
-                    <td>{{ check[4] }}</td>
-                    <td>{{ check[5] }}</td>
-                    <td>{{ check[6] }}</td>
+                    <td>{{ check.get('id') }}</td>
+                    <td>{{ check.get('status_code') }}</td>
+                    <td>{{ check.get('h1') }}</td>
+                    <td>{{ check.get('title') }}</td>
+                    <td>{{ check.get('description') }}</td>
+                    <td>{{ check.get('created_at') }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

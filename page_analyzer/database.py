@@ -62,7 +62,7 @@ def get_url_by_id(id):
 def get_checks_by_url_id(id):
     checks = []
     with connect() as conn:
-        with conn.cursor() as curs:
+        with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute('SELECT * FROM url_checks WHERE url_id=%s', (id,))
             checks = curs.fetchall()
     return checks

@@ -9,6 +9,7 @@ def normalize_url(url):
 
 
 def validate(url):
-    if is_url_valid(url) and len(url) < 255:
-        return None
+    if is_url_valid(url):
+        if len(normalize_url(url)) < 255:
+            return None
     return 'Некорректный URL'
