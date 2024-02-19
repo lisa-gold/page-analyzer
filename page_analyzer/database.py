@@ -20,7 +20,6 @@ def get_id_by_url_name(url_name):
             url_data = curs.fetchone()
             if url_data:
                 return url_data['id']
-    return False
 
 
 def add_url(url):
@@ -30,7 +29,7 @@ def add_url(url):
             curs.execute("INSERT INTO urls (name) VALUES (%s) RETURNING id",
                          (url,))
             url_id = curs.fetchone()[0]
-    return url_id
+            return url_id
 
 
 def get_urls_data():
@@ -47,7 +46,7 @@ def get_urls_data():
                          LEFT JOIN url_checks\
                          ON table1.u_id = url_checks.url_id;')
             urls_data = curs.fetchall()
-    return urls_data
+            return urls_data
 
 
 def get_url_by_id(id):
@@ -56,7 +55,7 @@ def get_url_by_id(id):
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
             url_data = curs.fetchone()
-    return url_data
+            return url_data
 
 
 def get_checks_by_url_id(id):
@@ -65,7 +64,7 @@ def get_checks_by_url_id(id):
         with conn.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute('SELECT * FROM url_checks WHERE url_id=%s', (id,))
             checks = curs.fetchall()
-    return checks
+            return checks
 
 
 def add_url_check(id, status_code, h1, title, description):

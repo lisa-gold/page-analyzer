@@ -16,7 +16,7 @@ from page_analyzer.database import (
     get_checks_by_url_id,
     add_url_check)
 import requests
-from page_analyzer.processing_response import get_information
+from page_analyzer.html import get_information
 
 
 app = Flask(__name__)

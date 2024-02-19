@@ -11,7 +11,7 @@ def get_information(content):
     meta = html.head.find('meta', attrs={'name': 'description'})
     description = meta['content']
 
-    h1, title, description = map(lambda elem: elem[:252] + '...' if len(elem) >= 255 else elem,
+    h1, title, description = map(lambda elem: elem[:255],
                                  [h1, title, description])
 
     return h1, title, description
