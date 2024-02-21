@@ -9,5 +9,9 @@ def normalize_url(url):
 
 
 def validate(url):
-    if not url or not is_url_valid(url) or len(normalize_url(url)) >= 255:
+    if not url:
+        return 'Поле URL не может быть пустым'
+    if not is_url_valid(url):
         return 'Некорректный URL'
+    if len(normalize_url(url)) >= 255:
+        return 'Длина URL превышает 254 символа'

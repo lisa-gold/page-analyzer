@@ -9,33 +9,32 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 def connect():
-    conn = psycopg2.connect(DATABASE_URL)
-    return conn
+    connect = psycopg2.connect(DATABASE_URL)
+    return connect
 
 
 def get_id_by_url_name(url_name):
-    with connect() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as curs:
-            curs.execute('SELECT * FROM urls WHERE name=%s', (url_name,))
-            url_data = curs.fetchone()
+    with connect() as connect:
+        with connect.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute('SELECT * FROM urls WHERE name=%s', (url_name,))
+            url_data = cursor.fetchone()
             if url_data:
                 return url_data['id']
 
 
 def add_url(url):
     url_id = -1
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute("INSERT INTO urls (name) VALUES (%s) RETURNING id",
+    with connect() as connect:
+        with connect.cursor() as cursor:
+            cursor.execute("INSERT INTO urls (name) VALUES (%s) RETURNING id",
                          (url,))
-            url_id = curs.fetchone()[0]
-            return url_id
+            return cursor.fetchone()[0]
 
 
 def get_urls_data():
-    with connect() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as curs:
-            curs.execute('SELECT DISTINCT ON (u_id) u_id, name, date, status_code\
+    with connect() as connect:
+        with connect.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute('SELECT DISTINCT ON (u_id) u_id, name, date, status_code\
                          FROM (\
                          SELECT urls.id AS u_id, urls.name AS name,\
                          max(url_checks.created_at) AS date\
@@ -45,32 +44,29 @@ def get_urls_data():
                          ) as table1\
                          LEFT JOIN url_checks\
                          ON table1.u_id = url_checks.url_id;')
-            urls_data = curs.fetchall()
-            return urls_data
+            return cursor.fetchall()
 
 
 def get_url_by_id(id):
     url_data = {}
-    with connect() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as curs:
-            curs.execute('SELECT * FROM urls WHERE id=%s', (id,))
-            url_data = curs.fetchone()
-            return url_data
+    with connect() as connect:
+        with connect.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute('SELECT * FROM urls WHERE id=%s', (id,))
+            return cursor.fetchone()
 
 
 def get_checks_by_url_id(id):
     checks = []
-    with connect() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as curs:
-            curs.execute('SELECT * FROM url_checks WHERE url_id=%s', (id,))
-            checks = curs.fetchall()
-            return checks
+    with connect() as connect:
+        with connect.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute('SELECT * FROM url_checks WHERE url_id=%s', (id,))
+            return cursor.fetchall()
 
 
 def add_url_check(id, status_code, h1, title, description):
-    with connect() as conn:
-        with conn.cursor() as curs:
-            curs.execute(
+    with connect() as connect:
+        with connect.cursor() as cursor:
+            cursor.execute(
                 'INSERT INTO url_checks\
                 (url_id, status_code, h1, title, description)\
                 VALUES (%s, %s, %s, %s, %s)',
