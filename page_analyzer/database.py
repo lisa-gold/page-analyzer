@@ -23,11 +23,10 @@ def get_id_by_url_name(url_name):
 
 
 def add_url(url):
-    url_id = -1
     with connect() as connection:
         with connection.cursor() as cursor:
             cursor.execute("INSERT INTO urls (name) VALUES (%s) RETURNING id",
-                         (url,))
+                           (url,))
             return cursor.fetchone()[0]
 
 
@@ -48,7 +47,6 @@ def get_urls_data():
 
 
 def get_url_by_id(id):
-    url_data = {}
     with connect() as connection:
         with connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute('SELECT * FROM urls WHERE id=%s', (id,))
@@ -56,7 +54,6 @@ def get_url_by_id(id):
 
 
 def get_checks_by_url_id(id):
-    checks = []
     with connect() as connection:
         with connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute('SELECT * FROM url_checks WHERE url_id=%s', (id,))
